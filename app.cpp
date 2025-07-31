@@ -10,12 +10,12 @@
 #include <sstream>
 using namespace std;
 
-// ------------------ Heap Class ------------------
+// ------------------ Min-Heap Class ------------------
 template <typename T>
 class Heap {
 public:
-    vector<T> data;
-    unordered_map<T, int> map;
+    vector<T> data;                      // Heap array
+    unordered_map<T, int> map;          // Item to index mapping (for fast updates)
 
     void add(T item) {
         data.push_back(item);
@@ -25,7 +25,7 @@ public:
 
     void upheapify(int ci) {
         int pi = (ci - 1) / 2;
-        if (ci > 0 && isLarger(data[ci], data[pi]) > 0) {
+        if (ci > 0 && isLarger(data[pi], data[ci]) > 0) {  // 🔁 pi > ci → swap for min-heap
             swap(ci, pi);
             upheapify(pi);
         }
@@ -59,14 +59,14 @@ public:
     void downheapify(int pi) {
         int lci = 2 * pi + 1;
         int rci = 2 * pi + 2;
-        int maxi = pi;
+        int mini = pi;
 
-        if (lci < size() && isLarger(data[lci], data[maxi]) > 0) maxi = lci;
-        if (rci < size() && isLarger(data[rci], data[maxi]) > 0) maxi = rci;
+        if (lci < size() && isLarger(data[mini], data[lci]) > 0) mini = lci;
+        if (rci < size() && isLarger(data[mini], data[rci]) > 0) mini = rci;
 
-        if (maxi != pi) {
-            swap(pi, maxi);
-            downheapify(maxi);
+        if (mini != pi) {
+            swap(pi, mini);
+            downheapify(mini);
         }
     }
 
@@ -74,8 +74,9 @@ public:
         return data[0];
     }
 
+    // MIN-HEAP comparison logic
     int isLarger(const T& a, const T& b) const {
-        return a > b ? 1 : (a < b ? -1 : 0);
+        return a > b ? 1 : (a < b ? -1 : 0);  // use < priority
     }
 
     void updatePriority(const T& item) {
@@ -85,6 +86,7 @@ public:
         }
     }
 };
+
 
 // ------------------ Graph Class ------------------
 class Graph {
@@ -98,16 +100,18 @@ public:
     void addVertex(string vname) {
         vtces[vname] = Vertex();
     }
-
+    
+ bool containsVertex(string vname) {
+        return vtces.find(vname) != vtces.end();
+    }
+    
     void addEdge(string vname1, string vname2, int cost) {
         if (!containsVertex(vname1) || !containsVertex(vname2)) return;
         vtces[vname1].nbrs[vname2] = cost;
         vtces[vname2].nbrs[vname1] = cost;
     }
 
-    bool containsVertex(string vname) {
-        return vtces.find(vname) != vtces.end();
-    }
+   
 
     void displayStations() {
         int i = 1;
@@ -126,39 +130,41 @@ public:
         }
     }
 
-    int dijkstra(string src, string dest, bool use_time) {
-        unordered_map<string, int> dist;
-        set<pair<int, string>> pq;
+   int dijkstra(string src, string dest) {
+    unordered_map<string, int> dist;
+    set<pair<int, string>> pq;
 
-        for (auto &v : vtces) {
-            dist[v.first] = INT_MAX;
-        }
+    for (auto &v : vtces) {
+        dist[v.first] = INT_MAX;
+    }
 
-        dist[src] = 0;
-        pq.insert({0, src});
+    dist[src] = 0;
+    pq.insert({0, src});
 
-        while (!pq.empty()) {
-            auto top = *pq.begin();
-            pq.erase(pq.begin());
+    while (!pq.empty()) {
+        auto top = *pq.begin();
+        pq.erase(pq.begin());
 
-            string node = top.second;
-            int d = top.first;
+        string node = top.second;
+        int d = top.first;
 
-            if (node == dest) return d;
+        if (node == dest) return d;
 
-            for (auto &nbr : vtces[node].nbrs) {
-                int weight = nbr.second;
-                int cost = use_time ? (d + 120 + 40 * weight) : (d + weight);
+        for (auto &nbr : vtces[node].nbrs) {
+            int weight = nbr.second;
+            int cost = d + weight;
 
-                if (cost < dist[nbr.first]) {
-                    pq.erase({dist[nbr.first], nbr.first});
-                    dist[nbr.first] = cost;
-                    pq.insert({cost, nbr.first});
-                }
+            if (cost < dist[nbr.first]) {
+                pq.erase({dist[nbr.first], nbr.first});  // Remove old entry
+                dist[nbr.first] = cost;                   // Update distance
+                pq.insert({cost, nbr.first});             // Insert new entry
             }
         }
-        return -1;
     }
+
+    return -1; // No path found
+}
+
 
     string getMinDistance(string src, string dst) {
         unordered_map<string, bool> visited;
@@ -305,7 +311,7 @@ int main() {
             cout << "Enter destination station: ";
             getline(cin, dst);
 
-            int res = metro.dijkstra(src, dst, false);
+            int res = metro.dijkstra(src, dst);
             if (res < 0) cout << "\n⚠️  Invalid station names or no path exists.\n";
             else cout << "\n✅ Shortest Distance: " << res << " meters\n";
         } else {
