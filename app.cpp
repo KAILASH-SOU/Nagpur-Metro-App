@@ -117,7 +117,7 @@ public:
     }
 
     void displayMap() {
-        cout << "\t Delhi Metro Map\n\t------------------\n";
+        cout << "\t Nagpur Metro Map\n\t------------------\n";
         for (auto &p : vtces) {
             cout << p.first << " =>\n";
             for (auto &nbr : p.second.nbrs) {
@@ -185,30 +185,7 @@ public:
         return best + "\nTotal Distance: " + to_string(min_dist);
     }
 
-    string getMinTime(string src, string dst) {
-        unordered_map<string, bool> visited;
-        string best = "";
-        int min_time = INT_MAX;
 
-        function<void(string, int, string)> dfs = [&](string node, int time, string path) {
-            if (node == dst) {
-                if (time < min_time) {
-                    min_time = time;
-                    best = path + " " + node;
-                }
-                return;
-            }
-            visited[node] = true;
-            for (auto &nbr : vtces[node].nbrs) {
-                if (!visited[nbr.first])
-                    dfs(nbr.first, time + 120 + 40 * nbr.second, path + " " + node);
-            }
-            visited[node] = false;
-        };
-
-        dfs(src, 0, "");
-        return best + "\nTotal Time (mins): " + to_string((min_time + 59) / 60);
-    }
 };
 
 // ------------------ Main App ------------------
@@ -225,72 +202,116 @@ using namespace std;
 
 // ... (Heap & Graph code identical)
 
-int main(){
+int main() {
     Graph metro;
-    // Add all stations (Orange Line)
-    vector<string> orange = {"Automotive Square","Nari Road","Indora Square","Kadbi Square",
-        "Gaddi Godam Square","Kasturchand Park","Zero Mile","Sitabuldi","Congress Nagar",
-        "Rahate Colony","Ajni Square","Chhatrapati Square","Jaiprakash Nagar","Ujjwal Nagar",
-        "Airport","Airport South","New Airport","Khapri"};
-    for(auto &s: orange) metro.addVertex(s);
 
-    // Aqua Line
-    vector<string> aqua = {"Prajapati Nagar","Vaishno Devi Square","Ambedkar Square",
-        "Telephone Exchange","Chitar Oli Square","Agrasen Square","Dosar Vaisya Square",
-        "Nagpur Railway Station","Cotton Market","Sitabuldi","Jhansi Rani Square",
-        "Institution of Engineers","Shankar Nagar Square","LAD Square","Dharampeth College",
-        "Subhash Nagar","Rachana Ring Road","Vasudev Nagar","Bansi Nagar","Lokmanya Nagar"};
-    for(auto &s: aqua) if(!metro.containsVertex(s)) metro.addVertex(s);
+    // Orange Line Stations
+    vector<string> orange = {
+        "Automotive Square", "Nari Road", "Indora Square", "Kadbi Square",
+        "Gaddi Godam Square", "Kasturchand Park", "Zero Mile", "Sitabuldi",
+        "Congress Nagar", "Rahate Colony", "Ajni Square", "Chhatrapati Square",
+        "Jaiprakash Nagar", "Ujjwal Nagar", "Airport", "Airport South",
+        "New Airport", "Khapri"
+    };
+    for (auto &s : orange) metro.addVertex(s);
 
-    // Orange edges (~1.2 km steps)
-    for(int i=0;i+1<orange.size();i++){
-        metro.addEdge(orange[i],orange[i+1], 1200);
+    // Aqua Line Stations
+    vector<string> aqua = {
+        "Prajapati Nagar", "Vaishno Devi Square", "Ambedkar Square",
+        "Telephone Exchange", "Chitar Oli Square", "Agrasen Square", "Dosar Vaisya Square",
+        "Nagpur Railway Station", "Cotton Market", "Sitabuldi", "Jhansi Rani Square",
+        "Institution of Engineers", "Shankar Nagar Square", "LAD Square", "Dharampeth College",
+        "Subhash Nagar", "Rachana Ring Road", "Vasudev Nagar", "Bansi Nagar", "Lokmanya Nagar"
+    };
+    for (auto &s : aqua) if (!metro.containsVertex(s)) metro.addVertex(s);
+
+    // Add edges with actual distances (approximate, in meters)
+    unordered_map<string, unordered_map<string, int>> distances = {
+        // Orange Line
+        {"Automotive Square", {{"Nari Road", 976}}},
+        {"Nari Road", {{"Indora Square", 1164}}},
+        {"Indora Square", {{"Kadbi Square", 1042}}},
+        {"Kadbi Square", {{"Gaddi Godam Square", 1155}}},
+        {"Gaddi Godam Square", {{"Kasturchand Park", 789}}},
+        {"Kasturchand Park", {{"Zero Mile", 622}}},
+        {"Zero Mile", {{"Sitabuldi", 537}}},
+        {"Sitabuldi", {{"Congress Nagar", 1188}}},
+        {"Congress Nagar", {{"Rahate Colony", 934}}},
+        {"Rahate Colony", {{"Ajni Square", 1210}}},
+        {"Ajni Square", {{"Chhatrapati Square", 876}}},
+        {"Chhatrapati Square", {{"Jaiprakash Nagar", 1033}}},
+        {"Jaiprakash Nagar", {{"Ujjwal Nagar", 1095}}},
+        {"Ujjwal Nagar", {{"Airport", 1111}}},
+        {"Airport", {{"Airport South", 1190}}},
+        {"Airport South", {{"New Airport", 2399}}},
+        {"New Airport", {{"Khapri", 800}}},
+
+        // Aqua Line
+        {"Prajapati Nagar", {{"Vaishno Devi Square", 1229}}},
+        {"Vaishno Devi Square", {{"Ambedkar Square", 719}}},
+        {"Ambedkar Square", {{"Telephone Exchange", 1014}}},
+        {"Telephone Exchange", {{"Chitar Oli Square", 1120}}},
+        {"Chitar Oli Square", {{"Agrasen Square", 933}}},
+        {"Agrasen Square", {{"Dosar Vaisya Square", 1075}}},
+        {"Dosar Vaisya Square", {{"Nagpur Railway Station", 842}}},
+        {"Nagpur Railway Station", {{"Cotton Market", 960}}},
+        {"Cotton Market", {{"Sitabuldi", 1302}}},
+        {"Sitabuldi", {{"Jhansi Rani Square", 1243}}},
+        {"Jhansi Rani Square", {{"Institution of Engineers", 982}}},
+        {"Institution of Engineers", {{"Shankar Nagar Square", 1021}}},
+        {"Shankar Nagar Square", {{"LAD Square", 935}}},
+        {"LAD Square", {{"Dharampeth College", 1173}}},
+        {"Dharampeth College", {{"Subhash Nagar", 1079}}},
+        {"Subhash Nagar", {{"Rachana Ring Road", 1274}}},
+        {"Rachana Ring Road", {{"Vasudev Nagar", 943}}},
+        {"Vasudev Nagar", {{"Bansi Nagar", 958}}},
+        {"Bansi Nagar", {{"Lokmanya Nagar", 997}}}
+    };
+
+    // Add bidirectional edges
+    for (auto &from : distances) {
+        for (auto &to : from.second) {
+            metro.addEdge(from.first, to.first, to.second);
+        }
     }
-    // Aqua edges based on chainage differences
-    for(int i=0;i+1<aqua.size();i++){
-        int dif = 1200; // you can replace with actual chainage diff lookup
-        metro.addEdge(aqua[i],aqua[i+1], dif);
+
+    // Main menu loop
+    while (true) {
+        cout << "\n=====================================================\n";
+        cout << "          🚇 WELCOME TO NAGPUR METRO APP 🚇\n";
+        cout << "=====================================================\n";
+        cout << "Choose an option from the menu below:\n\n";
+        cout << "  1. 📋  List All Stations\n";
+        cout << "  2. 🗺️   Show Metro Map (Stations + Connections)\n";
+        cout << "  3. 🚏  Get Shortest Distance Between Two Stations\n";
+        cout << "  4. ❌  Exit\n";
+        cout << "-----------------------------------------------------\n";
+        cout << "Enter your choice (1–4): ";
+
+        int c;
+        cin >> c;
+        cin.ignore();  // consume newline
+
+        if (c == 4) break;
+
+        if (c == 1) {
+            metro.displayStations();
+        } else if (c == 2) {
+            metro.displayMap();
+        } else if (c == 3) {
+            cout << "\nEnter source station: ";
+            string src, dst;
+            getline(cin, src);
+            cout << "Enter destination station: ";
+            getline(cin, dst);
+
+            int res = metro.dijkstra(src, dst, false);
+            if (res < 0) cout << "\n⚠️  Invalid station names or no path exists.\n";
+            else cout << "\n✅ Shortest Distance: " << res << " meters\n";
+        } else {
+            cout << "\n❌ Invalid choice. Please select between 1 and 4.\n";
+        }
     }
-
-    cout<<"**** WELCOME TO NAGPUR METRO APP ****\\n";
- while (true) {
-    cout << "\n=====================================================\n";
-    cout << "          🚇 WELCOME TO NAGPUR METRO APP 🚇\n";
-    cout << "=====================================================\n";
-    cout << "Choose an option from the menu below:\n\n";
-    cout << "  1. 📋  List All Stations\n";
-    cout << "  2. 🗺️   Show Metro Map (Stations + Connections)\n";
-    cout << "  3. 🚏  Get Shortest Distance Between Two Stations\n";
-    cout << "  4. ⏱️   Get Shortest Time Between Two Stations\n";
-    cout << "  5. ❌  Exit\n";
-    cout << "-----------------------------------------------------\n";
-    cout << "Enter your choice (1–5): ";
-
-    int c;
-    cin >> c;
-    cin.ignore();  // consume leftover newline
-
-    if (c == 5) break;
-
-    if (c == 1) metro.displayStations();
-    else if (c == 2) metro.displayMap();
-    else if (c == 3 || c == 4) {
-        cout << "\nEnter source station: ";
-        string src, dst;
-        getline(cin, src);
-        cout << "Enter destination station: ";
-        getline(cin, dst);
-
-        bool byTime = (c == 4);
-        int res = metro.dijkstra(src, dst, byTime);
-        if (res < 0) cout << "\n⚠️  Invalid station names or no path exists.\n";
-        else cout << "\n✅ " << (byTime ? "Estimated Time: " : "Shortest Distance: ") 
-                  << res << (byTime ? " minutes\n" : " meters\n");
-    }
-    else {
-        cout << "\n❌ Invalid choice. Please select between 1 and 5.\n";
-    }
-}
 
     return 0;
 }
